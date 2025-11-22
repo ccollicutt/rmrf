@@ -1,0 +1,121 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-22.04  # Ubuntu 22.04 has GLIBC 2.35
+    env:
+      CI: "true"
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install system dependencies
+      run: sudo apt-get update && sudo apt-get install -y make binutils patchelf
+
+    - name: Install uv
+      run: pip install uv
+
+    - name: Create virtual environment
+      run: uv venv .venv
+
+    - name: Install dependencies and PyInstaller
+      run: |
+        source .venv/bin/activate
+        uv pip install -e ".[dev]"
+        uv pip install pyinstaller
+
+    - name: Build binary
+      run: |
+        source .venv/bin/activate
+        make build-binary
+
+    - name: Run integration tests
+      run: |
+        source .venv/bin/activate
+        make test-integration
+
+    - name: Test binary
+      run: |
+        ./bin/rmrf --version
+        ./bin/rmrf --help
+
+    - name: Check binary GLIBC requirements
+      run: |
+        echo "Binary size:"
+        ls -lh bin/rmrf
+        echo ""
+        echo "Binary GLIBC requirements:"
+        objdump -T bin/rmrf | grep GLIBC | sed 's/.*GLIBC_\([.0-9]*\).*/GLIBC_\1/g' | sort -Vu | tail -5
+
+    - name: Generate checksums
+      run: |
+        cd bin
+        sha256sum rmrf > SHA256SUMS
+        cat SHA256SUMS
+
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          bin/rmrf
+          bin/SHA256SUMS
+        body: |
+          ## rmrf ${{ github.ref_name }}
+
+          Standalone binary for Linux (built on Ubuntu 22.04).
+
+          **Compatibility:** Requires GLIBC 2.35 or newer:
+          - Ubuntu 22.04+ / Debian 12+
+          - RHEL/Rocky/Alma 9+
+          - Fedora 35+
+          - Any distro with GLIBC 2.35+
+
+          **Older systems?** Install from source instead (see below).
+
+          ### Installation
+          ```bash
+          # Download binary and checksum
+          wget https://github.com/ccollicutt/rmrf/releases/latest/download/rmrf
+          wget https://github.com/ccollicutt/rmrf/releases/latest/download/SHA256SUMS
+
+          # Verify checksum
+          sha256sum -c SHA256SUMS
+
+          # Install
+          chmod +x rmrf
+          sudo mv rmrf /usr/local/bin/
+
+          # Verify installation
+          rmrf --version
+          ```
+
+          ### Alternative: Install from Source
+          If the binary doesn't work on your system (GLIBC too old), install from source:
+          ```bash
+          git clone https://github.com/ccollicutt/rmrf.git
+          cd rmrf
+          make quickstart
+          source .venv/bin/activate
+          rmrf --version
+          ```
+
+          ### Changes
+          See commit history for details.
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

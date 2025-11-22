@@ -1,0 +1,22 @@
+# Guarded-Ops Protection Level
+# Approval workflow; audit required
+# Suitable for operations environments
+
+name: guarded-ops
+description: "Approval workflow; audit required"
+default_environment: ops
+
+# Strict limits
+max_files: 5000
+max_bytes: 5368709120  # 5 GB
+
+# Backup and audit required
+require_backup: true
+require_audit: true
+require_confirmation: true
+
+# Extended retention
+retention_days: 14
+
+# Allow actual deletion
+allow_simulation_only: false

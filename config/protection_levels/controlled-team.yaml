@@ -1,0 +1,22 @@
+# Controlled-Team Protection Level
+# Rollback required; one confirmation
+# Suitable for staging environments
+
+name: controlled-team
+description: "Rollback required; one confirmation"
+default_environment: staging
+
+# Moderate limits
+max_files: 10000
+max_bytes: 10737418240  # 10 GB
+
+# Backup and audit required
+require_backup: true
+require_audit: true
+require_confirmation: true
+
+# Standard retention
+retention_days: 7
+
+# Allow actual deletion
+allow_simulation_only: false

@@ -1,0 +1,22 @@
+# Simulation-Only Protection Level
+# Dry-run only; no actual deletion
+# Suitable for digital twin environments
+
+name: simulation-only
+description: "Dry-run only; no actual deletion"
+default_environment: twin
+
+# No limits (since no actual deletion)
+max_files: null
+max_bytes: null
+
+# Backup and audit for tracking
+require_backup: true
+require_audit: true
+require_confirmation: false
+
+# Standard retention
+retention_days: 7
+
+# ONLY simulation allowed
+allow_simulation_only: true

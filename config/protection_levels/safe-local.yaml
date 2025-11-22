@@ -1,0 +1,22 @@
+# Safe-Local Protection Level
+# Minimal restrictions; rollback optional
+# Suitable for development environments
+
+name: safe-local
+description: "Minimal restrictions; rollback optional"
+default_environment: dev
+
+# No file count or size limits
+max_files: null
+max_bytes: null
+
+# Backup and audit are optional
+require_backup: false
+require_audit: false
+require_confirmation: false
+
+# Short retention period
+retention_days: 3
+
+# Allow actual deletion
+allow_simulation_only: false

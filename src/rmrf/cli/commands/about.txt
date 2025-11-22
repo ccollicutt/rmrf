@@ -1,0 +1,210 @@
+ABOUT RMRF
+======================================================================
+
+WHAT IS RMRF
+
+    rmrf is a safety-critical deletion utility that provides
+    policy-governed, reversible, and auditable file deletion.
+
+    Unlike traditional rm -rf which immediately and irreversibly
+    deletes files, rmrf enforces a multi-stage workflow with
+    safety gates at each step.
+
+WHY RMRF EXISTS
+
+    Traditional rm -rf has critical limitations:
+
+      - Irreversible: No way to recover deleted files
+      - Unauditable: No record of what was deleted or why
+      - Ungoverned: No policy enforcement or safety constraints
+      - Error-prone: One typo can delete critical data
+
+    rmrf addresses these problems by adding:
+
+      - Automatic backups with SHA-256 verification
+      - Complete audit trail of all operations
+      - Policy-based constraints and approval workflows
+      - Plan-validate-stage-execute workflow
+
+USAGE
+
+    Command-line usage:
+
+      rmrf plan /path/to/delete --scenario 'cleanup old logs'
+      rmrf show <plan-id>
+      rmrf validate <plan-id>
+      rmrf stage <plan-id>
+      rmrf apply <plan-id>
+      rmrf verify <plan-id>
+      rmrf closeout <plan-id>
+
+    Interactive shell mode:
+
+      rmrf shell
+
+      The shell provides persistent environment display, command
+      history, tab completion, and automatic plan tracking as you
+      work through the workflow.
+
+AVAILABLE COMMANDS
+
+    Setup & Configuration:
+      init         Initialize rmrf directory structure
+      preflight    Verify system configuration
+      about        Display comprehensive information
+      shell        Enter interactive shell mode
+
+    Core Workflow:
+      plan         Create deletion plan
+      show         Display plan details
+      validate     Validate plan against policies
+      stage        Create backup before deletion
+      apply        Execute deletion
+      verify       Verify deletion success
+      closeout     Mark plan complete
+
+    Approval & Locking:
+      approve      Approve plan (different user required)
+      list-pending-approvals  List plans awaiting approval
+      unlock       Release directory locks
+
+    Recovery & Tracking:
+      rollback     Restore files from backup
+      near-miss    Mark abandoned plan
+      mark-failed  Mark plan as failed
+      learn        Record lessons learned
+      status       View audit trail
+      list         List plans or backups
+
+    Maintenance:
+      cleanup      Remove old backups
+
+HOW IT WORKS
+
+    rmrf uses a multi-stage deletion lifecycle:
+
+    1. PLAN
+       Scans target paths and creates a deletion plan.
+       Calculates file count, total size, and risk score.
+       Assigns unique plan ID and expiration timestamp.
+
+    2. VALIDATE
+       Checks plan against protection level constraints.
+       Enforces file count limits, size limits, and policies.
+       May require approval for high-risk operations.
+
+    3. STAGE
+       Creates SHA-256 verified copies of all files.
+       Preserves directory structure and metadata.
+       Generates rollback manifest for recovery.
+
+    4. APPLY
+       Executes the deletion operation.
+       Verifies all targets were successfully removed.
+       Emits audit events for accountability.
+
+    5. VERIFY
+       Confirms targets were successfully deleted.
+       Records verification status for audit trail.
+
+    6. CLOSEOUT
+       Marks plan complete and optionally removes backup.
+       Records lessons learned for future operations.
+
+PROTECTION LEVELS
+
+    Protection levels define safety constraints based on environment.
+    Each level controls:
+
+      - Maximum files and bytes that can be deleted
+      - Whether backups are required
+      - Whether audit events are mandatory
+      - Whether user confirmation is needed
+      - How long backups are retained
+
+    Production environments automatically use stricter protection
+    levels with lower limits and mandatory backups.
+
+ENVIRONMENT AWARENESS
+
+    rmrf detects the current environment (dev/staging/prod) and
+    automatically applies appropriate safety constraints.
+
+    Production environments enforce:
+      - Lower file and size limits
+      - Mandatory backups
+      - Longer retention periods
+      - Required confirmations
+
+BACKUPS AND ROLLBACK
+
+    Every backup includes:
+      - Complete copy of all files
+      - SHA-256 checksum for each file
+      - Rollback manifest with metadata
+      - Original directory structure
+
+    Backups can be restored to reverse a deletion.
+    Checksums ensure data integrity during recovery.
+
+AUDIT TRAIL
+
+    All operations are logged to JSON event files.
+    Each event includes:
+
+      - Unique event ID
+      - Timestamp with timezone
+      - Operation phase (plan/validate/stage/apply/verify/closeout)
+      - Plan ID and environment
+      - User identifier
+      - Success or failure status
+      - Additional context and metadata
+
+    Audit logs provide a complete, tamper-evident history of
+    all deletion operations for compliance and debugging.
+
+VALIDATION
+
+    Built-in validation enforces:
+      - Plan expiration (time-to-live)
+      - File count limits
+      - Total size limits
+      - Backup existence (if required)
+      - Environment constraints
+
+    All validation is built into rmrf.
+    No external policy server required.
+
+APPROVAL WORKFLOW
+
+    High-risk deletions require multi-user approval for safety.
+    The approving user MUST be different from the plan creator
+    (different Linux UID). This prevents a single user from
+    creating and executing dangerous deletions without oversight.
+
+    When approval is required:
+      - Protection level has require_approval enabled
+      - Validation returns require_approval verdict
+      - High-risk operations in production environments
+
+    Approval workflow:
+      1. User A creates plan: rmrf plan /path --scenario "reason"
+      2. Plan is validated and marked as requiring approval
+      3. User B (different UID) approves: rmrf approve <plan-id>
+      4. User A continues: stage, apply, verify, closeout
+
+    Plans automatically acquire locks on target directories to
+    prevent concurrent operations. Use 'rmrf unlock' to release
+    locks if needed for cleanup or recovery.
+
+DESIGN PHILOSOPHY
+
+    rmrf follows these principles:
+
+      Safety First: Multiple gates prevent accidental deletion
+      Reversibility: Every operation can be undone
+      Auditability: Complete record of all operations
+      Simplicity: No external dependencies or servers
+      Environment-Aware: Constraints adapt to context
+
+======================================================================

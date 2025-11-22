@@ -1,0 +1,22 @@
+# Critical-System Protection Level
+# Dual confirmation; backup + audit required
+# Suitable for production environments
+
+name: critical-system
+description: "Dual confirmation; backup + audit required"
+default_environment: prod
+
+# Very strict limits
+max_files: 1000
+max_bytes: 1073741824  # 1 GB
+
+# Backup and audit mandatory
+require_backup: true
+require_audit: true
+require_confirmation: true
+
+# Long retention
+retention_days: 30
+
+# Allow actual deletion
+allow_simulation_only: false
